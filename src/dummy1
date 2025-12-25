@@ -1,0 +1,169 @@
+import 'package:flutter/material.dart';
+import 'package:zego_express_engine/zego_express_engine.dart';
+import 'package:zego_zimkit/zego_zimkit.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+
+import 'package:hospital_app/User Modules/Doctorlist/model/doctorsmodel.dart';
+
+class ZegoService {
+  // ----------------------------------------------------------------------
+  // 🔹 Zego Console Credentials
+  // ----------------------------------------------------------------------
+  static const int appID = 724789503;
+  static const String appSign =
+      '86dae0d2dfac7c46cf4e9208a8394f8a4bb5c5d486fc2268d24d87579704a8a8';
+
+  static ZegoExpressEngine? engine;
+
+  // ----------------------------------------------------------------------
+  // 🔹 STORED CURRENT USER (PATIENT OR DOCTOR)
+  // ----------------------------------------------------------------------
+  static String? currentUserId;
+  static String? currentUserName;
+  static String? currentUserAvatar;
+
+  // ======================================================================
+  // 1 Initialize Zego Engine
+  // ======================================================================
+  static Future<void> initZegoEngine() async {
+    if (engine != null) return;
+
+    final profile = ZegoEngineProfile(
+      appID,
+      ZegoScenario.Communication, // Better for audio/video call quality
+      appSign: appSign,
+    );
+
+    ZegoExpressEngine.createEngineWithProfile(profile);
+    engine = ZegoExpressEngine.instance;
+
+    debugPrint(" ZEGO ENGINE INITIALIZED SUCCESSFULLY");
+  }
+
+  // ======================================================================
+  // 2️⃣ Initialize Current User Login (ZIM)
+  // ======================================================================
+  static Future<void> initCurrentUser({
+    required String id,
+    required String name,
+    String? avatarUrl,
+  }) async {
+    currentUserId = id;
+    currentUserName = name;
+    currentUserAvatar = avatarUrl ?? "";
+
+    if (id.isEmpty) {
+      debugPrint(" ERROR: Cannot login ZIM → Empty user ID");
+      return;
+    }
+
+    try {
+      /// Disconnect previous user (if any)
+      final current = ZIMKit().currentUser();
+
+      if (current != null && current.baseInfo.userID != id) {
+        await ZIMKit().disconnectUser();
+      }
+
+      /// Connect new user
+      await ZIMKit().connectUser(
+        id: id,
+        name: name,
+        avatarUrl: currentUserAvatar!,
+      );
+
+      debugPrint(" ZIM CONNECTED → $id | $name");
+    } catch (e) {
+      debugPrint(" ZIM LOGIN ERROR: $e");
+    }
+  }
+
+  // ======================================================================
+  // 3️⃣ Send Call Invitation (ANY → ANY)
+  // ======================================================================
+  static Future<void> sendCallInvitationToUser({
+    required String targetUserId,
+    required String targetUserName,
+    bool isVideoCall = true,
+  }) async {
+    /// 0. Validate caller
+    if (currentUserId == null ||
+        currentUserName == null ||
+        currentUserId!.isEmpty) {
+      debugPrint(" ERROR → Caller NOT initialized, cannot send invitation");
+      return;
+    }
+
+    /// 2. Unique callID
+    final callID = DateTime.now().millisecondsSinceEpoch.toString();
+
+    try {
+      /// 3. Send invitation
+      await ZegoUIKitPrebuiltCallInvitationService().send(
+        invitees: [ZegoCallUser(targetUserId, targetUserName)],
+        isVideoCall: isVideoCall,
+        callID: callID,
+        resourceID: "zegouikit_call",
+      );
+
+      debugPrint(
+        " INVITATION SENT → $targetUserName ($targetUserId) | "
+        "Type: ${isVideoCall ? "Video" : "Voice"}",
+      );
+    } catch (e) {
+      debugPrint(" INVITATION ERROR: $e");
+    }
+  }
+
+  // Shortcut for Doctor objects
+  static Future<void> startCallWithDoctor({
+    required DoctorData doctor,
+    required bool isVideoCall,
+  }) async {
+    await sendCallInvitationToUser(
+      targetUserId: doctor.employeeCode.toString(), //  changed here
+      targetUserName: doctor.name ?? "Doctor",
+      isVideoCall: isVideoCall,
+    );
+  }
+
+  // ======================================================================
+  // 4️⃣ ROOM MANAGEMENT (Custom UI Only)
+  // ======================================================================
+  static Future<void> loginRoom(String roomID) async {
+    if (currentUserId == null) {
+      debugPrint(" Cannot login room → currentUserId NULL");
+      return;
+    }
+
+    await engine?.loginRoom(
+      roomID,
+      ZegoUser(currentUserId!, currentUserName ?? "User"),
+    );
+
+    debugPrint(" ROOM JOINED → $roomID");
+  }
+
+  static Future<void> logoutRoom(String roomID) async {
+    await engine?.logoutRoom(roomID);
+    debugPrint("🚪 ROOM EXIT → $roomID");
+  }
+
+  static Future<void> startPublishing(String streamID) async {
+    await engine?.startPreview();
+    await engine?.startPublishingStream(streamID);
+  }
+
+  static Future<void> startPlaying(String streamID, int viewID) async {
+    await engine?.startPlayingStream(streamID, canvas: ZegoCanvas(viewID));
+  }
+
+  static Future<void> stopPublishing() async {
+    await engine?.stopPreview();
+    await engine?.stopPublishingStream();
+  }
+
+  static Future<void> stopPlaying(String streamID) async {
+    await engine?.stopPlayingStream(streamID);
+  }
+}

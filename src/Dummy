@@ -1,0 +1,117 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:hospital_app/Employee Modules/Doctor/Account_nav/Controller/Accountcontroller.dart';
+
+import 'package:hospital_app/User Modules/profile_nav/profile_screen/controller/profile_option.dart';
+
+import 'package:hospital_app/Utiles/theme.dart';
+import 'package:hospital_app/widgets/Splashscreen.dart';
+import 'package:hospital_app/widgets/zegoservice.dart';
+
+import 'package:zego_zimkit/zego_zimkit.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// 🔥 PLATFORM CHANNEL FOR FULL-SCREEN NOTIFICATION PERMISSION
+const MethodChannel _channel = MethodChannel("app.settings/channel");
+
+Future<void> openFullScreenPermissionPage() async {
+try {
+await _channel.invokeMethod("openFullScreenSettings");
+} catch (e) {
+print("⚠ Error opening full-screen settings: $e");
+}
+}
+
+Future<void> main() async {
+WidgetsFlutterBinding.ensureInitialized();
+
+// Required for popups
+ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+
+// Zego Engine
+await ZegoService.initZegoEngine();
+
+// ZIM signaling
+await ZIMKit().init(appID: ZegoService.appID, appSign: ZegoService.appSign);
+
+// PATIENT profile
+final patientController = Get.put(ProfileController());
+await patientController.fetchUserProfile();
+bool isPatientLogged = patientController.userProfileData.isNotEmpty;
+
+// DOCTOR profile
+final doctorController = Get.put(DoctorProfileController());
+await doctorController.fetchDoctorProfile();
+bool isDoctorLogged = doctorController.profile.value != null;
+
+String? userID;
+String? userName;
+String? avatar;
+
+if (isPatientLogged) {
+final p = patientController.userProfileData;
+userID = p["user_id"].toString();
+
+userName = p["full_name"] ?? "Patient";
+avatar = p["image"] ?? "";
+} else if (isDoctorLogged) {
+final d = doctorController.profile.value!;
+userID = d.employeeCode.toString();
+
+userName = d.name ?? "Doctor";
+avatar = d.image ?? "";
+}
+
+if (userID != null) {
+await ZegoService.initCurrentUser(
+id: userID,
+name: userName!,
+avatarUrl: avatar,
+);
+
+ZegoUIKitPrebuiltCallInvitationService().init(
+appID: ZegoService.appID,
+appSign: ZegoService.appSign,
+userID: userID,
+userName: userName,
+plugins: [ZegoUIKitSignalingPlugin()],
+);
+
+// 🔥 OPEN FULL-SCREEN NOTIFICATION PERMISSION PAGE
+openFullScreenPermissionPage();
+}
+
+runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+const MyApp({super.key});
+
+@override
+Widget build(BuildContext context) {
+return GetMaterialApp(
+title: "Hospital App",
+theme: AppTheme.appTheme,
+navigatorKey: navigatorKey,
+debugShowCheckedModeBanner: false,
+home: const SplashScreen(),
+
+builder: (context, child) {
+return Stack(
+children: [
+child!,
+
+// Ongoing call mini floating window
+ZegoUIKitPrebuiltCallMiniOverlayPage(
+contextQuery: () => navigatorKey.currentContext!,
+),
+],
+);
+},
+);
+}
+}

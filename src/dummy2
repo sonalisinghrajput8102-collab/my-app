@@ -1,0 +1,540 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:hospital_app/User%20Modules/Appointments_nav/controller/Allpatientsappoinmet_controller.dart';
+import 'package:hospital_app/User%20Modules/BookSlot_page/view/Bookslot_page.dart';
+import 'package:hospital_app/User%20Modules/navbar/navbar.dart';
+import 'package:hospital_app/User%20Modules/profile_nav/profile_screen/controller/profile_option.dart';
+import 'package:hospital_app/Utiles/app_color.dart';
+import 'package:hospital_app/widgets/zegoservice.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+// models
+import 'package:hospital_app/User%20Modules/Doctorlist/model/doctorsmodel.dart'
+    hide Relative, Appointment;
+import 'package:hospital_app/User%20Modules/BookSlot_page/model/Bookslot_model.dart'
+    hide User;
+
+class UpcomingVoiceScreen extends StatelessWidget {
+  const UpcomingVoiceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    /// ✅ SAFE ARGUMENTS
+    final Map<String, dynamic> args =
+        (Get.arguments as Map<String, dynamic>?) ?? {};
+
+    final Appointment? appointment = args["appointment"];
+
+    final bool fromOnlineBooking = args["appointment_date"] != null;
+
+    final profileController = Get.find<ProfileController>();
+
+    final String appointmentDate =
+        args["appointment_date"] ?? appointment?.appointmentDate ?? "N/A";
+
+    final String appointmentTime =
+        args["appointment_time"] ?? appointment?.appointmentTime ?? "N/A";
+
+    final String appointmentCode =
+        args["appointment_code"] ?? appointment?.appointmentCode ?? "N/A";
+
+    final int? appointmentId = appointment?.appointmentId;
+
+    final Relative? relative = appointment?.relative;
+
+    /// Doctor (2 possible types)
+    final dynamic doctorRaw = args["doctor"];
+    DoctorData? docData;
+    Doctor? docBackend;
+
+    if (doctorRaw is DoctorData) docData = doctorRaw;
+    if (doctorRaw is Doctor) docBackend = doctorRaw;
+
+    final doctorName = docData?.name ?? docBackend?.name ?? "Unknown Doctor";
+    final doctorImage = docData?.image ?? docBackend?.image ?? "";
+    final doctorGender = docBackend?.gender ?? "N/A";
+    final employeeCode =
+        docData?.employeeCode ?? docBackend?.employeeCode ?? "N/A";
+
+    final String issue = appointment?.issue ?? "";
+    final String description = appointment?.description ?? "";
+
+    final bool hasRelative = relative != null;
+
+    final patientName = hasRelative
+        ? (relative.name ?? "--")
+        : profileController.fullName.value;
+
+    final patientAge = hasRelative ? "${relative.age ?? '--'}" : "--";
+    final patientGender = hasRelative ? (relative.gender ?? "--") : "--";
+    final patientRelation = hasRelative ? (relative.relation ?? "--") : "Self";
+    final patientBlood = hasRelative ? (relative.bloodGroup ?? "--") : "--";
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, Color(0xFF4BE1C8)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _mainContainer(
+                context,
+                doctorRaw,
+                appointment,
+                doctorName,
+                doctorGender,
+                employeeCode,
+                appointmentDate,
+                appointmentTime,
+                appointmentCode,
+                doctorImage,
+                patientName,
+                patientAge,
+                patientGender,
+                patientRelation,
+                patientBlood,
+                fromOnlineBooking,
+                issue,
+                description,
+                appointmentId,
+              ),
+            ),
+            _header(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= MAIN CONTAINER =================
+  Widget _mainContainer(
+    BuildContext context,
+    dynamic doctor,
+    Appointment? appointment,
+    String doctorName,
+    String doctorGender,
+    String employeeCode,
+    String date,
+    String time,
+    String appointmentCode,
+    String doctorImage,
+    String patientName,
+    String patientAge,
+    String patientGender,
+    String patientRelation,
+    String patientBlood,
+    bool fromOnlineBooking,
+    String issue,
+    String description,
+    int? appointmentId,
+  ) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.89,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _doctorInfo(
+              appointment,
+              doctorImage,
+              doctorName,
+              doctorGender,
+              employeeCode,
+              fromOnlineBooking,
+            ),
+            const SizedBox(height: 25),
+            _appointmentDetails(date, time, appointmentCode),
+            const SizedBox(height: 25),
+            if (!fromOnlineBooking)
+              _patientDetails(
+                name: patientName,
+                age: patientAge,
+                gender: patientGender,
+                relation: patientRelation,
+                bloodGroup: patientBlood,
+              ),
+            const SizedBox(height: 25),
+            if (!fromOnlineBooking) _issueDescriptionBlock(issue, description),
+            const SizedBox(height: 25),
+            _actionButtons(
+              fromOnlineBooking: fromOnlineBooking,
+              appointmentId: appointmentId,
+              onCancel: () {
+                if (fromOnlineBooking) {
+                  Get.offAll(() => const Bottomnavbar(initialIndex: 2));
+                } else {
+                  _showCancelDialog(Get.context!, appointmentId);
+                }
+              },
+              onReschedule: () {
+                // 🔥 SAME booking flow reuse
+                Get.to(
+                  () => const BookSlotScreen(),
+                  arguments: {
+                    "doctor": doctor,
+                    "isReschedule": true,
+                    "appointment_id": appointmentId,
+                  },
+                );
+              },
+            ),
+
+            const SizedBox(height: 30),
+            _callButton(doctor, doctorName),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================= DOCTOR INFO =================
+  Widget _doctorInfo(
+    Appointment? appointment,
+    String image,
+    String name,
+    String gender,
+    String employeeCode,
+    bool fromOnlineBooking,
+  ) {
+    final String status = appointment?.status ?? "--";
+
+    Color badgeBG;
+    Color badgeText;
+
+    if (status == "Completed") {
+      badgeBG = Colors.green.withOpacity(0.15);
+      badgeText = Colors.green;
+    } else if (status == "Cancelled") {
+      badgeBG = Colors.red.withOpacity(0.15);
+      badgeText = Colors.red;
+    } else {
+      badgeBG = Colors.orange.withOpacity(0.15);
+      badgeText = Colors.orange;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: image.isNotEmpty
+              ? Image.network(
+                  image,
+                  height: 80,
+                  width: 80,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Image.asset("assets/images/doctor.png", height: 80),
+                )
+              : Image.asset("assets/images/doctor.png", height: 80, width: 80),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Dr. $name",
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (!fromOnlineBooking)
+                Text(
+                  gender,
+                  style: GoogleFonts.manrope(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              Text(
+                employeeCode,
+                style: GoogleFonts.manrope(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: badgeBG,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            status,
+            style: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: badgeText,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ================= APPOINTMENT DETAILS =================
+  Widget _appointmentDetails(String date, String time, String code) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Appointment Details",
+          style: GoogleFonts.manrope(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _row(Icons.calendar_today, "Date:", date),
+        _row(Icons.access_time, "Time:", time),
+        _row(Icons.confirmation_number, "Appointment ID:", code),
+      ],
+    );
+  }
+
+  // ================= PATIENT DETAILS =================
+  Widget _patientDetails({
+    required String name,
+    required String age,
+    required String gender,
+    required String relation,
+    required String bloodGroup,
+  }) {
+    final bool isSelf = relation == "Self";
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Patient Details",
+          style: GoogleFonts.manrope(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _row(Icons.person, "Name:", name),
+        if (!isSelf) ...[
+          _row(Icons.cake, "Age:", age),
+          _row(Icons.male, "Gender:", gender),
+          _row(Icons.family_restroom, "Relation:", relation),
+          _row(Icons.bloodtype, "Blood Group:", bloodGroup),
+        ],
+      ],
+    );
+  }
+
+  // ================= ISSUE BLOCK =================
+  Widget _issueDescriptionBlock(String issue, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Health Issue & Description",
+          style: GoogleFonts.manrope(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _row(Icons.report_problem, "Issue:", issue.isEmpty ? "N/A" : issue),
+        _row(
+          Icons.description,
+          "Description:",
+          description.isEmpty ? "N/A" : description,
+        ),
+      ],
+    );
+  }
+
+  // ================= BUTTONS =================
+
+  // ================= CALL BUTTON =================
+  Widget _callButton(dynamic doctor, String doctorName) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextButton.icon(
+        onPressed: () async {
+          final mic = await Permission.microphone.request();
+          if (!mic.isGranted) {
+            Get.snackbar("Permission Required", "Microphone is needed");
+            return;
+          }
+
+          String? zegoId;
+          if (doctor is DoctorData) zegoId = doctor.employeeCode;
+          if (doctor is Doctor) zegoId = doctor.employeeCode;
+
+          await ZegoService.sendCallInvitationToUser(
+            targetUserId: zegoId!,
+            targetUserName: doctorName,
+            isVideoCall: false,
+          );
+        },
+        icon: const Icon(Icons.call, color: AppColors.primary),
+        label: Text(
+          "Start Voice Call",
+          style: GoogleFonts.manrope(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ================= ROW =================
+  Widget _row(IconData icon, String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Text(title, style: GoogleFonts.manrope(fontWeight: FontWeight.w600)),
+          const SizedBox(width: 5),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+
+  // ================= HEADER =================
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 35, left: 20, right: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const BackButton(color: Colors.white),
+          InkWell(
+            onTap: () => Get.to(() => const Bottomnavbar()),
+            child: const Icon(Icons.home, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ================= CANCEL DIALOG =================
+  void _showCancelDialog(BuildContext context, int? appointmentId) {
+    final TextEditingController reasonCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("Cancel Appointment?"),
+        content: TextField(
+          controller: reasonCtrl,
+          maxLines: 3,
+          decoration: const InputDecoration(hintText: "Reason..."),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("No"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (reasonCtrl.text.trim().isEmpty) {
+                Get.snackbar("Error", "Reason required");
+                return;
+              }
+
+              Navigator.pop(context);
+
+              final c = Get.put(PatientAllAppointmentsController());
+              final success = await c.cancelAppointment(
+                appointmentId,
+                reasonCtrl.text,
+              );
+
+              if (success) {
+                Get.offAll(() => const Bottomnavbar(initialIndex: 2));
+                Future.delayed(
+                  const Duration(milliseconds: 200),
+                  () => c.fetchAllAppointments(),
+                );
+              }
+            },
+            child: const Text("Yes, Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButtons({
+    required bool fromOnlineBooking,
+    required int? appointmentId,
+    required VoidCallback onCancel,
+    required VoidCallback onReschedule,
+  }) {
+    if (fromOnlineBooking) {
+      // 🔥 Online flow unchanged
+      return SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: onCancel,
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: const Text(
+            "Your Appointment",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    // 🔥 History flow → Cancel + Reschedule
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: OutlinedButton(
+              onPressed: onReschedule,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.primary),
+              ),
+              child: Text(
+                "Reschedule",
+                style: GoogleFonts.manrope(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: onCancel,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
