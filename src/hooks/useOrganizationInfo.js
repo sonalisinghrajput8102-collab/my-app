@@ -34,6 +34,11 @@ const useOrganizationInfo = () => {
                         phone: data.company_contact,
                         email: data.company_email,
                         website: data.company_website,
+                        doctors_count: data.doctors_count || 150,
+                        patients_count: data.patients_count || 50000,
+                        success_rate: data.success_rate || 98,
+                        years_experience: data.years_experience || 25,
+                        emergency_phone: data.emergency_phone || "+919876543210",
                     });
                 }
             } catch (error) {

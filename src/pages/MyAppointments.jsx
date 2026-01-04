@@ -16,6 +16,7 @@ const MyAppointments = () => {
   const [error, setError] = useState(null);
 
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
@@ -181,7 +182,10 @@ const MyAppointments = () => {
 
                 <div className="mt-3 flex gap-2 flex-wrap">
                   <button
-                    onClick={() => setSelectedAppointment(item)}
+                    onClick={() => {
+                      setSelectedAppointment(item);
+                      setShowDetailsModal(true);
+                    }}
                     className="px-3 py-1 bg-teal-600 text-white rounded"
                   >
                     View Details
@@ -225,6 +229,42 @@ const MyAppointments = () => {
           currentUser={currentUser}
           onEndCall={handleEndCall}
         />
+      )}
+
+      {/* ================= DETAILS MODAL ================= */}
+      {showDetailsModal && selectedAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Appointment Details</h3>
+            <p><strong>ID:</strong> {selectedAppointment.appointment_code || selectedAppointment.appointment_id}</p>
+            <p><strong>Doctor:</strong> {selectedAppointment.doctor?.name || "N/A"}</p>
+            <p><strong>Date:</strong> {selectedAppointment.appointment_date}</p>
+            <p><strong>Time:</strong> {selectedAppointment.appointment_time}</p>
+            <p><strong>Status:</strong> {selectedAppointment.status}</p>
+            <p><strong>Type:</strong> {getConsultationLabel(selectedAppointment.subtype)}</p>
+            <button onClick={() => setShowDetailsModal(false)} className="mt-4 px-4 py-2 bg-teal-600 text-white rounded">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= CANCEL MODAL ================= */}
+      {showCancelModal && appointmentToCancel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Cancel Appointment</h3>
+            <p>Are you sure you want to cancel this appointment?</p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Reason for cancellation"
+              className="w-full p-2 border rounded mt-2"
+            />
+            <div className="flex gap-2 mt-4">
+              <button onClick={cancelAppointment} className="px-4 py-2 bg-red-600 text-white rounded">Confirm Cancel</button>
+              <button onClick={() => setShowCancelModal(false)} className="px-4 py-2 bg-gray-600 text-white rounded">Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
