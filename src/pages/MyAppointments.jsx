@@ -10,6 +10,7 @@ import axios from "axios";
 import { getToken } from "../utils/auth";
 import VideoCallUIKit from "../Components/VideoCallUIKit";
 import CallInvitationHandler from "../Components/CallInvitationHandler";
+import IncomingCallPopup from "../Components/IncomingCallPopup";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -24,6 +25,7 @@ const MyAppointments = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeCallAppointment, setActiveCallAppointment] = useState(null);
   const [isDoctorInvited, setIsDoctorInvited] = useState(false);
+  const [incomingCallAppointment, setIncomingCallAppointment] = useState(null);
 
   /* ================= FETCH APPOINTMENTS ================= */
   const fetchAppointments = async () => {
@@ -112,9 +114,17 @@ const MyAppointments = () => {
   const getCallButton = (item) => {
     if (item.status?.toLowerCase().includes("cancel")) return null;
 
+    // Determine if user is patient or doctor
+    const isDoctor = currentUser?.user_type === 'doctor' || currentUser?.role === 'doctor';
+    
+    // Show button only if appointment is confirmed
+    if (!item.status?.toLowerCase().includes('confirm') && !item.status?.toLowerCase().includes('booked')) {
+      return null;
+    }
+
     if (item.subtype?.toLowerCase().includes("video"))
       return {
-        label: "Join Video Call",
+        label: isDoctor ? "Call Patient" : "Call Doctor",
         icon: <FaVideo className="mr-2" />,
         className: "bg-blue-600 hover:bg-blue-700 text-white",
       };
@@ -124,7 +134,7 @@ const MyAppointments = () => {
       item.subtype?.toLowerCase().includes("audio")
     )
       return {
-        label: "Start Voice Call",
+        label: isDoctor ? "Call Patient" : "Call Doctor",
         icon: <FaPhoneAlt className="mr-2" />,
         className: "bg-green-600 hover:bg-green-700 text-white",
       };
@@ -134,10 +144,16 @@ const MyAppointments = () => {
 
   /* ================= CALL HANDLERS ================= */
   const handleCall = (appointment) => {
+    // Ensure appointment has doctor info
+    if (!appointment.doctor?.id && !appointment.doctor_id) {
+      console.warn('⚠️ Doctor information not available in appointment');
+    }
+
     setActiveCallAppointment(appointment);
     setIsDoctorInvited(false); // Doctor hasn't accepted yet
     
     console.log('📱 Call initiated for appointment:', appointment.appointment_id);
+    console.log('👨‍⚕️ Doctor:', appointment.doctor?.name || appointment.doctor_name);
     console.log('📞 Sending invite to doctor...');
   };
 
@@ -155,6 +171,49 @@ const MyAppointments = () => {
     console.log('📞 Call ended');
     setActiveCallAppointment(null);
     setIsDoctorInvited(false);
+    setIncomingCallAppointment(null);
+  };
+
+  const handleIncomingCall = (appointment, caller) => {
+    // Only show popup if the current user is NOT the caller
+    // i.e., only the recipient should see the popup, not the person who initiated the call
+    
+    if (!caller) {
+      console.warn('⚠️ No caller info provided');
+      return;
+    }
+
+    // Don't show popup if current user is the caller
+    if (caller.id === currentUser?.id) {
+      console.log('📱 Call initiated by me, not showing popup');
+      return;
+    }
+
+    // Determine caller name based on who initiated
+    const isCallerDoctor = caller.user_type === 'doctor';
+    const callerName = isCallerDoctor ? 
+      (appointment.doctor?.name || caller.name || "Doctor") :
+      (appointment.patient?.name || caller.name || "Patient");
+    
+    console.log('🔔 Incoming call from:', callerName);
+    console.log('📊 Full appointment data:', appointment);
+    setIncomingCallAppointment(appointment);
+  };
+
+  const handleAcceptCall = () => {
+    // Doctor accepts the call
+    if (incomingCallAppointment) {
+      console.log('✅ Doctor accepted call');
+      setActiveCallAppointment(incomingCallAppointment);
+      setIncomingCallAppointment(null);
+      setIsDoctorInvited(true);
+    }
+  };
+
+  const handleRejectCall = () => {
+    // Doctor rejects the call
+    console.log('❌ Doctor rejected call');
+    setIncomingCallAppointment(null);
   };
 
   /* ================= UI ================= */
@@ -191,7 +250,9 @@ const MyAppointments = () => {
                   {item.appointment_code || item.appointment_id}
                 </p>
                 <p className="font-semibold">
-                  {item.doctor?.name || "Doctor"}
+                  {currentUser?.user_type === 'doctor' ? 
+                    (item.patient?.name || item.patient_name || "Patient") : 
+                    (item.doctor?.name || "Doctor")}
                 </p>
                 <p className="text-sm">
                   {item.appointment_date} | {item.appointment_time}
@@ -237,6 +298,14 @@ const MyAppointments = () => {
       </div>
 
       {/* ================= CALL INVITATION HANDLER (for doctors) ================= */}
+      {/* ================= INCOMING CALL POPUP FOR DOCTOR ================= */}
+      <IncomingCallPopup
+        appointment={incomingCallAppointment}
+        currentUser={currentUser}
+        onAccept={handleAcceptCall}
+        onReject={handleRejectCall}
+      />
+
       {currentUser && (
         <CallInvitationHandler
           currentUser={currentUser}
@@ -252,6 +321,7 @@ const MyAppointments = () => {
           currentUser={currentUser}
           onEndCall={handleEndCall}
           isDoctorInvited={isDoctorInvited}
+          onCallInitiated={handleIncomingCall}
         />
       )}
     </div>
