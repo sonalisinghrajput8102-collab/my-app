@@ -1,13 +1,15 @@
-// src/pages/DoctorsPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DoctorCard from "../components/DoctorCard";
 import DoctorDetail from "../BookAppointmentComponents/DoctorDetail";
+import VideoCallUIKit from "../components/VideoCallUIKit";
 
 const DoctorsPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [call, setCall] = useState(false); // 🔥 video call state
 
+  // ================= FETCH DOCTORS =================
   useEffect(() => {
     axios
       .get("https://developer.bitmaxtest.com/api/doctors")
@@ -19,17 +21,24 @@ const DoctorsPage = () => {
       .catch((err) => console.error(err));
   }, []);
 
-  // Agar user ne kisi doctor pe click kiya → detail show karo
+  // ================= DOCTOR DETAIL PAGE =================
   if (selectedDoctor) {
     const doctor = selectedDoctor;
+
     return (
-      <div className="p-4">
+      <div className="p-4 relative">
+        {/* Back Button */}
         <button
-          onClick={() => setSelectedDoctor(null)}
+          onClick={() => {
+            setSelectedDoctor(null);
+            setCall(false);
+          }}
           className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
         >
           ← Back to Doctors
         </button>
+
+        {/* Doctor Detail */}
         <DoctorDetail
           doctor={{
             name: doctor.name,
@@ -42,13 +51,21 @@ const DoctorsPage = () => {
             about: "About info",
             fee: "Fee info",
           }}
-          onContinue={() => alert("Continue Booking")}
+          onContinue={() => setCall(true)} // 🔥 Start Video Call
         />
+
+        {/* ================= VIDEO CALL UI ================= */}
+        {call && (
+          <VideoCallUIKit
+            role="patient"
+            onEndCall={() => setCall(false)}
+          />
+        )}
       </div>
     );
   }
 
-  // Doctor list
+  // ================= DOCTORS LIST PAGE =================
   return (
     <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {doctors.map((doc) => (

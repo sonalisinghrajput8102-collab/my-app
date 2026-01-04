@@ -54,7 +54,7 @@ const PatientStories = () => {
           <span className="font-semibold">MediCare Hospital</span>.
         </p>
 
-        {/* बस यही एक जगह बदली है – height थोड़ी बढ़ाई */}
+       
         <div className="relative max-w-4xl mx-auto">
           <div className="bg-white rounded-3xl shadow-2xl 
                           p-10 md:p-14 lg:p-16          

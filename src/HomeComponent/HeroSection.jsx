@@ -133,7 +133,7 @@ const HeroSection = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <button
+                {/* <button
                   onClick={handleBookAppointment}
                   className="group relative flex items-center justify-center gap-3 px-10 py-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold text-lg rounded-xl shadow-2xl shadow-teal-500/30 hover:shadow-teal-500/50 transition-all duration-300 hover:scale-105"
                 >
@@ -143,7 +143,7 @@ const HeroSection = () => {
                     {isLoggedIn ? "Book Appointment Now" : "Book Appointment"}
                   </span>
                   <ChevronRight className="relative z-10 w-5 h-5 transition-transform group-hover:translate-x-2" />
-                </button>
+                </button> */}
 
                 <button
                   onClick={handleEmergencyCall}

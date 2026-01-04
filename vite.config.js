@@ -5,14 +5,19 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     server: {
-        port: 5173, // optional – default hi hota hai, rakh sakte ho
+        port: 5173, // Optional – default hi hai
         proxy: {
-            '/api': {
+            '/api/zego-token': {
                 target: 'http://localhost:5000',
                 changeOrigin: true,
                 secure: false,
-                rewrite: (path) => path.replace(/^\/api/, '/api') // normally nahi chahiye, but safe rakhte hain
-            }
-        }
-    }
+            },
+            '/api': {
+                target: 'https://developer.bitmaxtest.com', //
+                changeOrigin: true,
+                secure: false,
+
+            },
+        },
+    },
 })

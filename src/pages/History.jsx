@@ -4,25 +4,29 @@ import React, { useEffect, useState } from "react";
 const History = () => {
   const [bookings, setBookings] = useState([]);
 
-  // Load booking history from localStorage
-  useEffect(() => {
+  const loadBookings = () => {
     const savedBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
     setBookings(savedBookings);
-  }, []);
+  };
 
-  // Listen for new booking added (real-time update without refresh)
+  // Initial load
   useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedBookings = JSON.parse(localStorage.getItem("bookingHistory")) || [];
-      setBookings(updatedBookings);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    // Also check once on mount in case it was added just now
-    handleStorageChange();
-
-    return () => window.removeEventListener("storage", handleStorageChange);
+    loadBookings();
   }, []);
+
+  // Real-time update when other tab/window adds booking
+  useEffect(() => {
+    window.addEventListener("storage", loadBookings);
+    return () => window.removeEventListener("storage", loadBookings);
+  }, []);
+
+  // Manual clear history function
+  const clearHistory = () => {
+    if (window.confirm("Are you sure you want to delete all booking history? This action cannot be undone.")) {
+      localStorage.removeItem("bookingHistory");
+      setBookings([]);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
@@ -35,21 +39,37 @@ const History = () => {
           <p className="text-xl text-gray-600">
             All your booked lab tests and checkups at one place
           </p>
+          <p className="text-sm text-gray-500 mt-2">
+            ✅ Your history is saved permanently in your browser until you choose to clear it.
+          </p>
         </div>
+
+        {/* Clear History Button (only if there are bookings) */}
+        {bookings.length > 0 && (
+          <div className="text-center">
+            <button
+              onClick={clearHistory}
+              className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition shadow-lg font-medium"
+            >
+              Clear All History
+            </button>
+          </div>
+        )}
 
         {bookings.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-8xl mb-6 text-gray-300">🩺</div>
             <h3 className="text-2xl font-semibold text-gray-600 mb-4">No bookings yet</h3>
-            <p className="text-gray-500 text-lg">
-              Book your first test now and it will appear here!
+            <p className="text-gray-500 text-lg max-w-md mx-auto">
+              Book your first test now and it will appear here. 
+              Your history stays saved even if you close the browser!
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {bookings.map((booking, index) => (
               <div
-                key={index}
+                key={index} // बेहतर होगा unique ID हो, लेकिन अभी index से काम चला लें
                 className="bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2 border border-teal-100"
               >
                 <h2 className="text-2xl font-bold text-[#0B717A] mb-4 line-clamp-2">
@@ -92,4 +112,4 @@ const History = () => {
   );
 };
 
-export default History
+export default History;

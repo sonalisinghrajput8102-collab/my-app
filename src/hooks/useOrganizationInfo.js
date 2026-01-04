@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { getToken } from "../utils/auth";
 
+const API_BASE = "https://developer.bitmaxtest.com";
+
 const useOrganizationInfo = () => {
     const [orgData, setOrgData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -10,33 +12,38 @@ const useOrganizationInfo = () => {
         const fetchOrganization = async() => {
             try {
                 const token = getToken();
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
                 const res = await axios.get(
-                    "https://developer.bitmaxtest.com/api/organization", { headers }
+                    API_BASE + "/api/organization", {
+                        headers: {
+                            Authorization: "Bearer " + token,
+                            Accept: "application/json",
+                        },
+                    }
                 );
 
-                // Log response for debugging
-                console.debug("useOrganizationInfo: API response:", res && res.data);
+                // ✅ NO optional chaining
+                if (res && res.data && res.data.data) {
+                    const data = res.data.data;
 
-                const data = res && res.data && res.data.data;
-
-                if (data) {
-                    const mapped = {
+                    setOrgData({
                         name: data.hospital_name,
-                        logo: "/assest/image/logo.png",
+                        logo: data.logo,
                         favicon: data.favicon,
                         address: data.company_address,
                         phone: data.company_contact,
                         email: data.company_email,
                         website: data.company_website,
-                    };
-                    console.debug("useOrganizationInfo: mapped orgData:", mapped);
-                    setOrgData(mapped);
-                } else {
-                    console.warn("useOrganizationInfo: no data in response", res);
+                    });
                 }
             } catch (error) {
-                console.error("Organization API error:", error);
+                // ✅ SAFE error handling
+                if (error && error.response && error.response.status === 401) {
+                    console.warn("Organization API unauthorized (401)");
+                } else {
+                    console.error("Organization API error:", error);
+                }
+                setOrgData(null);
             } finally {
                 setLoading(false);
             }

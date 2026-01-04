@@ -7,7 +7,7 @@ import DoctorCard from '../BookAppointmentComponents/DoctorCard';
 import DoctorDetail from '../BookAppointmentComponents/DoctorDetail';
 import PatientForm from '../BookAppointmentComponents/PatientForm';
 import Calendar from '../BookAppointmentComponents/Calendar';
-import PaymentPage from './PaymentPage';
+import PaymentPage from './paymentpage';
 import SuccessPage from './Receipt';
 
 import Specialties from '../data/specialties';

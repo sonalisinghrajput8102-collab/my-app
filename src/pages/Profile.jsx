@@ -428,7 +428,7 @@ const Profile = () => {
               {/* Quick Actions Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <QuickActionCard 
-                  to="/health-records"
+                  to="/history"
                   icon={<FileText size={24} />}
                   title="Health Records"
                   description="View medical history"
@@ -453,7 +453,7 @@ const Profile = () => {
               {/* Settings Sections */}
               <div className="space-y-6">
                 {/* Account Section */}
-                <Section title="Account Settings" icon={<Settings size={20} />}>
+                {/* <Section title="Account Settings" icon={<Settings size={20} />}>
                   <MenuItem
                     to="/billing"
                     icon={<CreditCard size={20} />}
@@ -475,7 +475,7 @@ const Profile = () => {
                     subtitle="Language & theme"
                     border
                   />
-                </Section>
+                </Section> */}
 
                 {/* Support Section */}
                 <Section title="Support & Legal" icon={<Shield size={20} />}>

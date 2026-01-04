@@ -5,6 +5,7 @@ import HealthGateway from "../HomeComponent/HealthGateway";
 import AboutSection from "../HomeComponent/AboutSection";
 import WhyChoose from "../HomeComponent/WhyChoose";
 import Gallery from "../HomeComponent/Gallery";
+import NewSection from "../HomeComponent/NewsSection";
 import PatientStories from "../HomeComponent/PatientStories";
 
 // import HeroSection from "../Home Component/HeroSection";
@@ -24,6 +25,7 @@ const Home = () => {
             <AboutSection />
             <WhyChoose />
             <Gallery />
+            <NewSection />
             <PatientStories />
          {/* <HeroSection />
          <AboutSection />

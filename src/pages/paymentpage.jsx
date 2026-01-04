@@ -6,13 +6,26 @@ const PaymentPage = ({ doctor, date, slot, onPaymentSuccess }) => {
   const totalAmount = consultationFee + serviceCharge;
 
   const [processing, setProcessing] = useState(false);
+  const [razorpayKey, setRazorpayKey] = useState("");
 
   // Load temp booking data (issue wagaira)
   const tempBooking = JSON.parse(localStorage.getItem("tempBooking") || "{}");
   const issue = tempBooking.issue || "Not specified";
 
-  // Razorpay script load
+  // Fetch Razorpay key and load script
   useEffect(() => {
+    const fetchKey = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/razorpay-key");
+        const data = await response.json();
+        setRazorpayKey(data.key_id);
+      } catch (error) {
+        console.error("Failed to fetch Razorpay key:", error);
+      }
+    };
+
+    fetchKey();
+
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -38,7 +51,7 @@ const PaymentPage = ({ doctor, date, slot, onPaymentSuccess }) => {
     const timeDisplay = slot ? `${slot.start} - ${slot.end}` : "Time not selected";
 
     const options = {
-      key: "rzp_test_RqyfR6ogB6XV65", // Test key (production mein badal dena)
+      key: razorpayKey || "rzp_test_RqyfR6ogB6XV65", // Use fetched key or fallback
       amount: totalAmount * 100,
       currency: "INR",
       name: "Your Clinic Name",

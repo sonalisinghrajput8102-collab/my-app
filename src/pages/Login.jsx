@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Hospital,
-  User,
-  Lock,
-  Stethoscope,
-  Eye,
-  EyeOff,
-  LogIn,
-} from "lucide-react";
+import { Hospital, User, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,9 +8,7 @@ import { saveAuth } from "../utils/auth";
 export default function HospitalLogin() {
   const navigate = useNavigate();
 
-  const [userType, setUserType] = useState("patient");
   const [username, setUsername] = useState("");
-  const [employeeCode, setEmployeeCode] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +17,7 @@ export default function HospitalLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!password || (userType === "patient" && !username) || (userType === "employee" && !employeeCode)) {
+    if (!username || !password) {
       toast.error("All fields are required");
       return;
     }
@@ -36,7 +26,7 @@ export default function HospitalLogin() {
 
     try {
       const payload = {
-        username: userType === "patient" ? username : employeeCode,
+        username,
         password,
       };
 
@@ -101,49 +91,14 @@ export default function HospitalLogin() {
             <h2 className="text-2xl font-bold mt-2">Login</h2>
           </div>
 
-          {/* USER TYPE */}
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => setUserType("patient")}
-              className={`flex-1 py-2 rounded ${
-                userType === "patient"
-                  ? "bg-white shadow text-teal-600"
-                  : ""
-              }`}
-            >
-              <User className="inline w-4 h-4 mr-1" />
-              Patient
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setUserType("employee")}
-              className={`flex-1 py-2 rounded ${
-                userType === "employee"
-                  ? "bg-white shadow text-teal-600"
-                  : ""
-              }`}
-            >
-              <Stethoscope className="inline w-4 h-4 mr-1" />
-              Employee
-            </button>
-          </div>
-
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* USERNAME / EMPLOYEE CODE */}
+            {/* USERNAME */}
             <div>
-              <label className="text-sm font-medium">
-                {userType === "patient" ? "Username" : "Employee Code"}
-              </label>
+              <label className="text-sm font-medium">Username</label>
               <input
                 type="text"
-                value={userType === "patient" ? username : employeeCode}
-                onChange={(e) =>
-                  userType === "patient"
-                    ? setUsername(e.target.value)
-                    : setEmployeeCode(e.target.value)
-                }
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full mt-1 px-4 py-3 border rounded-lg"
               />
             </div>
