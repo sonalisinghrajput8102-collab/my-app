@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import { getToken } from "../utils/auth";
 import VideoCallUIKit from "../Components/VideoCallUIKit";
+import CallInvitationHandler from "../Components/CallInvitationHandler";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -22,6 +23,7 @@ const MyAppointments = () => {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [activeCallAppointment, setActiveCallAppointment] = useState(null);
+  const [isDoctorInvited, setIsDoctorInvited] = useState(false);
 
   /* ================= FETCH APPOINTMENTS ================= */
   const fetchAppointments = async () => {
@@ -133,10 +135,26 @@ const MyAppointments = () => {
   /* ================= CALL HANDLERS ================= */
   const handleCall = (appointment) => {
     setActiveCallAppointment(appointment);
+    setIsDoctorInvited(false); // Doctor hasn't accepted yet
+    
+    console.log('📱 Call initiated for appointment:', appointment.appointment_id);
+    console.log('📞 Sending invite to doctor...');
   };
 
   const handleEndCall = () => {
     setActiveCallAppointment(null);
+    setIsDoctorInvited(false);
+  };
+
+  const handleDoctorInvited = (callInfo) => {
+    console.log('👨‍⚕️ Doctor received invitation:', callInfo);
+    setIsDoctorInvited(true);
+  };
+
+  const handleCallEnded = () => {
+    console.log('📞 Call ended');
+    setActiveCallAppointment(null);
+    setIsDoctorInvited(false);
   };
 
   /* ================= UI ================= */
@@ -218,12 +236,22 @@ const MyAppointments = () => {
         })}
       </div>
 
+      {/* ================= CALL INVITATION HANDLER (for doctors) ================= */}
+      {currentUser && (
+        <CallInvitationHandler
+          currentUser={currentUser}
+          onCallInvited={handleDoctorInvited}
+          onCallEnded={handleCallEnded}
+        />
+      )}
+
       {/* ================= VIDEO / VOICE CALL ================= */}
       {activeCallAppointment && currentUser && (
         <VideoCallUIKit
           appointment={activeCallAppointment}
           currentUser={currentUser}
           onEndCall={handleEndCall}
+          isDoctorInvited={isDoctorInvited}
         />
       )}
     </div>
