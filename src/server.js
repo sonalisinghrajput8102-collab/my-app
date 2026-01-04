@@ -21,8 +21,8 @@ app.use(express.json());
 
 // Razorpay setup
 const razorpay = new Razorpay({
-    key_id: "rzp_test_RqyfR6ogB6XV65", // तुम्हारा test key
-    key_secret: "UZLvGr97IaOO32u74CWueKDc", // तुम्हारा secret
+    key_id: "rzp_test_RqyfR6ogB6XV65", 
+    key_secret: "UZLvGr97IaOO32u74CWueKDc", 
 });
 
 // Razorpay order create
@@ -56,7 +56,7 @@ app.get("/api/razorpay-key", (req, res) => {
 // ==================== ZEGO TOKEN 04 GENERATION ====================
 
 const ZEGO_APP_ID = 1595503963;
-const ZEGO_SERVER_SECRET = "e5b1286edede9001deaae9d545bb5553"; // ← यहाँ Zego Console से 32 chars वाला secret paste करो!!
+const ZEGO_SERVER_SECRET = "d1f4e23c4786493edd67e6287a9ea34529157de0ee79006f790b0feaf728059f"; // Server secret from Zego Console
 
 function generateToken04(appId, userId, secret, effectiveTimeInSeconds = 186400, payload = "") {
     try {
