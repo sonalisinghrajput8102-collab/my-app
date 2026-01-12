@@ -28,8 +28,8 @@ const CallInvitationHandler = ({ currentUser, onCallInvited, onCallEnded }) => {
       return;
     }
 
-    const userID = String(currentUser.id || '').trim();
-    const userName = String(currentUser.name || '').trim();
+    const userID = String(currentUser.id || currentUser.user_id || '').trim();
+    const userName = String(currentUser.name || currentUser.full_name || '').trim();
     const userType = currentUser.user_type || currentUser.role || 'unknown';
 
     console.log('✅ Credentials Found:');

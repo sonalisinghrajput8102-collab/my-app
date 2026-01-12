@@ -29,6 +29,8 @@ import HealthCheckupSlot from "./pages/HealthCheckupSlot";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
 import FloatingDownloadButton from "./Components/FloatingDownloadButton";
+import CallInvitationHandler from "./Components/CallInvitationHandler";
+import { getUser } from "./utils/auth";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -51,6 +53,20 @@ function App() {
         user={user}
       />
       <FloatingDownloadButton />
+
+      {/* Global Call Invitation Handler for receiving calls anywhere in the app */}
+      {user && (
+        <CallInvitationHandler
+          currentUser={user}
+          onCallInvited={(callInfo) => {
+            console.log('Global call invitation received:', callInfo);
+            // This will show the popup globally
+          }}
+          onCallEnded={() => {
+            console.log('Global call ended');
+          }}
+        />
+      )}
 
       <div className="pt-16 min-h-screen bg-gray-50">
         <Routes>

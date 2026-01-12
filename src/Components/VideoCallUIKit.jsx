@@ -9,8 +9,12 @@ const VideoCallUIKit = ({ appointment, currentUser, onEndCall, isDoctorInvited, 
   const [calling, setCalling] = useState(false);
 
   useEffect(() => {
-    if (!appointment || !currentUser || !containerRef.current) {
+    if (!appointment || !currentUser) {
       console.warn('VideoCallUIKit: Missing required props');
+      return;
+    }
+
+    if (!containerRef.current) {
       return;
     }
 

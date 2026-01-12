@@ -10,7 +10,7 @@ import axios from "axios";
 import { getToken } from "../utils/auth";
 import VideoCallUIKit from "../Components/VideoCallUIKit";
 import CallInvitationHandler from "../Components/CallInvitationHandler";
-import IncomingCallPopup from "../Components/IncomingCallPopup";
+
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -302,13 +302,6 @@ const MyAppointments = () => {
       </div>
 
       {/* ================= CALL INVITATION HANDLER (for doctors) ================= */}
-      {/* ================= INCOMING CALL POPUP FOR DOCTOR ================= */}
-      <IncomingCallPopup
-        appointment={incomingCallAppointment}
-        currentUser={currentUser}
-        onAccept={handleAcceptCall}
-        onReject={handleRejectCall}
-      />
 
       {currentUser && (
         <CallInvitationHandler
