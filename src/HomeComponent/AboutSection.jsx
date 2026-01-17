@@ -1,6 +1,7 @@
 // components/AboutSection.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
+import { IMAGES } from '../assets/images';
 
 const AboutSection = () => {
   return (
@@ -43,7 +44,7 @@ const AboutSection = () => {
           >
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="../../public/assest/image/About.jpg"
+                src={IMAGES.about}
                 alt="MediCare Hospital Surgery"
                 className="w-full h-auto max-h-96 lg:max-h-[560px] object-cover"
                 loading="eager"

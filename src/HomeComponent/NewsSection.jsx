@@ -1,36 +1,37 @@
 import React from 'react';
+import { IMAGES } from '../assets/images';
 
 const NewsSection = () => {
   const highlights = [
     {
       title: "State-of-the-Art Infrastructure",
       text: "Modern architecture with cutting-edge diagnostic tools, advanced operation theaters, and the latest medical equipment for precise and effective care.",
-      image: "../../public/assest/image/New1.webp"
+      image: IMAGES.new1
     },
     {
       title: "Expert & Compassionate Team",
       text: "Highly qualified doctors, specialists, and caring nursing staff who treat every patient like family, ensuring personalized and empathetic treatment.",
-      image: "../../public/assest/image/New6.jpg"
+      image: IMAGES.new6
     },
     {
       title: "Serene Healing Environment",
       text: "Spacious, hygienic, and peacefully designed patient rooms with natural light and modern amenities to promote comfort and faster recovery.",
-      image: "../../public/assest/image/New2.webp"
+      image: IMAGES.new2
     },
     {
       title: "Advanced Treatment Technology",
       text: "From robotic surgery to high-precision imaging and laser therapies – we bring global-standard medical innovations right to you.",
-      image: "../../public/assest/image/New3.jpg"
+      image: IMAGES.new3
     },
     {
       title: "24/7 Emergency Care",
       text: "Round-the-clock emergency services with dedicated ICU, trauma team, and swift response to handle any critical situation with expertise.",
-      image: "../../public/assest/image/New4.webp"
+      image: IMAGES.new4
     },
     {
       title: "Trusted by Thousands",
       text: "Countless success stories, grateful patients, and years of excellence that have built unbreakable trust in our commitment to your health.",
-      image: "../../public/assest/image/New5.jpeg"
+      image: IMAGES.new5
     }
   ];
 

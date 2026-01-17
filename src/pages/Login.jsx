@@ -51,6 +51,33 @@ export default function HospitalLogin() {
         user: result.data,
       });
 
+      // 🔄 FETCH FULL PROFILE DATA (including image)
+      try {
+        const profileResponse = await fetch(
+          "https://developer.bitmaxtest.com/api/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${result.token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (profileResponse.ok) {
+          const profileResult = await profileResponse.json();
+          if (profileResult.data) {
+            // Update auth with full profile data
+            saveAuth({
+              token: result.token,
+              user: profileResult.data,
+            });
+          }
+        }
+      } catch (profileErr) {
+        console.warn("Failed to fetch profile after login:", profileErr);
+        // Continue anyway, basic login data is saved
+      }
+
       toast.success(`Welcome ${result.data.full_name}`, {
         autoClose: 2000,
       });

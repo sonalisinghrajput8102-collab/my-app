@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Phone, Calendar, Shield, Clock, ChevronRight, Star, Award, Users, Sparkles, MapPin } from "lucide-react";
 import useOrganizationInfo from "../hooks/useOrganizationInfo";
+import { IMAGES } from "../assets/images";
 
 const HeroSection = () => {
   const { orgData, loading } = useOrganizationInfo();
@@ -13,6 +14,8 @@ const HeroSection = () => {
   }), [orgData]);
 
   const [stats, setStats] = useState(initialStats);
+  const [bannerData, setBannerData] = useState(null);
+  const [bannerLoading, setBannerLoading] = useState(true);
 
   useEffect(() => {
     // Animate stats on load
@@ -29,6 +32,23 @@ const HeroSection = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    // Fetch banner data from API
+    const fetchBanner = async () => {
+      try {
+        const response = await fetch('https://developer.bitmaxtest.com/api/banners/web');
+        const data = await response.json();
+        if (data.success && data.data && data.data.length > 0) {
+          setBannerData(data.data[0]); // Use the first banner
+        }
+      } catch (error) {
+        console.error('Error fetching banner:', error);
+      }
+    };
+
+    fetchBanner();
+  }, []);
+
 
 
   // Remove unused variables to fix ESLint errors
@@ -38,7 +58,12 @@ const HeroSection = () => {
     <section className="relative w-full min-h-screen overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Main Background Image with Overlay */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[url('/assest/image/banner3.jpg')] bg-cover bg-center bg-no-repeat"></div>
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${bannerData?.image_url || IMAGES.banner3})`
+          }}
+        ></div>
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900/90 via-gray-900/80 to-gray-900/70"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-gray-900/30"></div>
       </div>
