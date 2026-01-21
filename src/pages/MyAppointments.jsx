@@ -27,6 +27,7 @@ const MyAppointments = () => {
   const [activeCallAppointment, setActiveCallAppointment] = useState(null);
   const [isDoctorInvited, setIsDoctorInvited] = useState(false);
   const [incomingCallAppointment, setIncomingCallAppointment] = useState(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   /* ================= FETCH APPOINTMENTS ================= */
   const fetchAppointments = async () => {
@@ -145,17 +146,8 @@ const MyAppointments = () => {
 
   /* ================= CALL HANDLERS ================= */
   const handleCall = (appointment) => {
-    // Ensure appointment has doctor info
-    if (!appointment.doctor?.id && !appointment.doctor_id) {
-      console.warn('⚠️ Doctor information not available in appointment');
-    }
-
-    setActiveCallAppointment(appointment);
-    setIsDoctorInvited(false); // Doctor hasn't accepted yet
-    
-    console.log('📱 Call initiated for appointment:', appointment.appointment_id);
-    console.log('👨‍⚕️ Doctor:', appointment.doctor?.name || appointment.doctor_name);
-    console.log('📞 Sending invite to doctor...');
+    // Open download modal instead of starting call
+    setShowDownloadModal(true);
   };
 
   const handleEndCall = () => {
@@ -353,6 +345,38 @@ const MyAppointments = () => {
             <div className="flex gap-2 mt-4">
               <button onClick={cancelAppointment} className="px-4 py-2 bg-red-600 text-white rounded">Confirm Cancel</button>
               <button onClick={() => setShowCancelModal(false)} className="px-4 py-2 bg-gray-600 text-white rounded">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= DOWNLOAD APK MODAL ================= */}
+      {showDownloadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="mb-4">
+                <FaPhoneAlt className="text-teal-600 text-4xl mx-auto mb-2" />
+                <h3 className="text-xl font-bold text-gray-800">Download Required</h3>
+              </div>
+              <p className="text-gray-600 mb-6">Please download the APK to connect for video/audio calls.</p>
+              <div className="flex gap-3 justify-center">
+                <a
+                  href="https://github.com/abhishekbitmax-ops/Hospital_app/releases/download/Hospital/app-release.apk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  onClick={() => setShowDownloadModal(false)}
+                >
+                  Download APK
+                </a>
+                <button
+                  onClick={() => setShowDownloadModal(false)}
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
